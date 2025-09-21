@@ -1,24 +1,23 @@
-//
-//  ContentView.swift
-//  CameraIntrinsicsLogger
-//
-//  Created by Arnav Gurha on 9/9/25.
-//
-
 import SwiftUI
 
 struct ContentView: View {
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
-        }
-        .padding()
+        CameraIntrinsicsViewControllerRepresentable()
+            .edgesIgnoringSafeArea(.all)
     }
 }
 
-#Preview {
-    ContentView()
+// This struct acts as a bridge between SwiftUI and UIKit.
+struct CameraIntrinsicsViewControllerRepresentable: UIViewControllerRepresentable {
+    
+    // Creates and returns the initial instance of our view controller.
+    func makeUIViewController(context: Context) -> CameraIntrinsicsViewController {
+        return CameraIntrinsicsViewController()
+    }
+    
+    // Updates the view controller. This is not needed for our simple app.
+    func updateUIViewController(_ uiViewController: CameraIntrinsicsViewController, context: Context) {
+        // No updates are needed for this simple app.
+    }
 }
+

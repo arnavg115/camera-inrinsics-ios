@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		4B1D793F2E70F5C600AED43E /* CoreMedia.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4B1D793E2E70F5C600AED43E /* CoreMedia.framework */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		4B1D791B2E70EF5500AED43E /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -27,6 +31,7 @@
 		4B1D790D2E70EF5400AED43E /* CameraIntrinsicsLogger.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CameraIntrinsicsLogger.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		4B1D791A2E70EF5500AED43E /* CameraIntrinsicsLoggerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CameraIntrinsicsLoggerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		4B1D79242E70EF5500AED43E /* CameraIntrinsicsLoggerUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CameraIntrinsicsLoggerUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		4B1D793E2E70F5C600AED43E /* CoreMedia.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMedia.framework; path = System/Library/Frameworks/CoreMedia.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -52,6 +57,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4B1D793F2E70F5C600AED43E /* CoreMedia.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -78,6 +84,7 @@
 				4B1D790F2E70EF5400AED43E /* CameraIntrinsicsLogger */,
 				4B1D791D2E70EF5500AED43E /* CameraIntrinsicsLoggerTests */,
 				4B1D79272E70EF5500AED43E /* CameraIntrinsicsLoggerUITests */,
+				4B1D793D2E70F5C600AED43E /* Frameworks */,
 				4B1D790E2E70EF5400AED43E /* Products */,
 			);
 			sourceTree = "<group>";
@@ -90,6 +97,14 @@
 				4B1D79242E70EF5500AED43E /* CameraIntrinsicsLoggerUITests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		4B1D793D2E70F5C600AED43E /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				4B1D793E2E70F5C600AED43E /* CoreMedia.framework */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -395,8 +410,10 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 272732Y7JB;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSCameraUsageDescription = "This app needs to access your camera to get its intrinsic matrix for computer vision purposes";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -422,8 +439,10 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 272732Y7JB;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSCameraUsageDescription = "This app needs to access your camera to get its intrinsic matrix for computer vision purposes";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

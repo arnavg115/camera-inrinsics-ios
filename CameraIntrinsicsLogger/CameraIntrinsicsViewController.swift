@@ -5,118 +5,117 @@ import simd
 
 class CameraIntrinsicsViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDelegate {
 
-    // The AVCaptureSession is the central hub for the camera.
     private let captureSession = AVCaptureSession()
-    
-    // The AVCaptureVideoPreviewLayer displays the live camera feed on the screen.
     private lazy var previewLayer: AVCaptureVideoPreviewLayer = {
         let layer = AVCaptureVideoPreviewLayer(session: self.captureSession)
         layer.videoGravity = .resizeAspectFill
         return layer
     }()
-
-    // The queue to process video frames on a background thread.
     private let videoDataOutputQueue = DispatchQueue(label: "VideoDataOutputQueue",
                                                      qos: .userInitiated,
                                                      attributes: [],
                                                      autoreleaseFrequency: .workItem)
-    
-    // MARK: - View Lifecycle
+
+    // MARK: - Running average storage
+    private var intrinsicSum = matrix_float3x3(0)
+    private var intrinsicCount: Float = 0
+
+    // MARK: - UI Label for displaying matrices
+    private let intrinsicsLabel: UILabel = {
+        let label = UILabel()
+        label.numberOfLines = 0
+        label.textColor = .yellow
+        label.font = .monospacedSystemFont(ofSize: 13, weight: .regular)
+        label.backgroundColor = UIColor.black.withAlphaComponent(0.4)
+        label.layer.cornerRadius = 8
+        label.layer.masksToBounds = true
+        label.textAlignment = .left
+        return label
+    }()
 
     override func viewDidLoad() {
         super.viewDidLoad()
         setupCaptureSession()
-        
-        // Add the preview layer to the view so the camera feed is visible.
+
         view.layer.addSublayer(previewLayer)
-        
-        // Start the session on a background thread.
+        view.addSubview(intrinsicsLabel)
+        intrinsicsLabel.frame = CGRect(x: 10, y: 50, width: view.bounds.width - 20, height: 150)
+
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
-            guard let self = self else { return }
-            self.captureSession.startRunning()
-            print("Capture session started. Look for the intrinsic matrix in the logs.")
+            self?.captureSession.startRunning()
         }
     }
-    
+
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
-        // Ensure the preview layer fills the entire screen.
         previewLayer.frame = view.bounds
+        intrinsicsLabel.frame = CGRect(x: 10, y: 50, width: view.bounds.width - 20, height: 150)
     }
 
-    // MARK: - Capture Session Setup
-
     func setupCaptureSession() {
-        // Begin configuring the capture session.
         captureSession.beginConfiguration()
-        
-        // Set the session preset for a specific quality level.
         captureSession.sessionPreset = .hd1920x1080
         
-        // Select the back wide-angle camera.
         guard let videoDevice = AVCaptureDevice.default(.builtInWideAngleCamera,
                                                         for: .video,
-                                                        position: .back) else {
-            fatalError("No back camera found")
-        }
-        
-        // Create video input from the device.
-        guard let videoInput = try? AVCaptureDeviceInput(device: videoDevice) else {
-            fatalError("Could not create video input")
-        }
-        
-        // Add the input to the session.
-        if captureSession.canAddInput(videoInput) {
-            captureSession.addInput(videoInput)
-        } else {
-            fatalError("Cannot add video input")
-        }
-        
-        // Setup video data output to receive frames.
+                                                        position: .back),
+              let videoInput = try? AVCaptureDeviceInput(device: videoDevice)
+        else { fatalError("Camera unavailable") }
+
+        guard captureSession.canAddInput(videoInput) else { fatalError("Cannot add input") }
+        captureSession.addInput(videoInput)
+
         let videoDataOutput = AVCaptureVideoDataOutput()
         videoDataOutput.setSampleBufferDelegate(self, queue: videoDataOutputQueue)
-        
-        // Add the output to the session.
-        if captureSession.canAddOutput(videoDataOutput) {
-            captureSession.addOutput(videoDataOutput)
-        } else {
-            fatalError("Cannot add video data output")
-        }
-        
-        // Enable intrinsic matrix delivery if supported.
+        guard captureSession.canAddOutput(videoDataOutput) else { fatalError("Cannot add output") }
+        captureSession.addOutput(videoDataOutput)
+
         if let connection = videoDataOutput.connection(with: .video),
            connection.isCameraIntrinsicMatrixDeliverySupported {
             connection.isCameraIntrinsicMatrixDeliveryEnabled = true
-        } else {
-            print("Camera intrinsic matrix delivery not supported on this device/configuration.")
         }
-        
-        // Commit the configuration changes.
+
         captureSession.commitConfiguration()
     }
-    
-    // MARK: - AVCaptureVideoDataOutputSampleBufferDelegate
 
-    // This delegate method is called for each video frame.
-    func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
-        
-        // Get the intrinsic matrix from the sample buffer metadata.
-        guard let intrinsicData = CMGetAttachment(sampleBuffer, key: kCMSampleBufferAttachmentKey_CameraIntrinsicMatrix, attachmentModeOut: nil) as? Data else {
-            // No intrinsic matrix found for this frame. This can be normal.
-            return
-        }
-        
-        // The intrinsic matrix is stored as a Data object. We convert it to the correct matrix type.
+    func captureOutput(_ output: AVCaptureOutput,
+                       didOutput sampleBuffer: CMSampleBuffer,
+                       from connection: AVCaptureConnection) {
+
+        guard let intrinsicData =
+                CMGetAttachment(sampleBuffer,
+                                key: kCMSampleBufferAttachmentKey_CameraIntrinsicMatrix,
+                                attachmentModeOut: nil) as? Data else { return }
+
         let intrinsicMatrix: matrix_float3x3 = intrinsicData.withUnsafeBytes {
             $0.load(as: matrix_float3x3.self)
         }
-        
-        // Print the result on the main queue to avoid cluttering the background queue.
+
+        // Update running average
+        intrinsicSum += intrinsicMatrix
+        intrinsicCount += 1
+        let avgMatrix = intrinsicSum * (1.0 / intrinsicCount)
+
+        // Format for display
+        let text = """
+        Current:
+        \(matrixString(intrinsicMatrix))
+
+        Average:
+        \(matrixString(avgMatrix))
+        """
+
         DispatchQueue.main.async {
-            print("---")
-            print("Camera Intrinsic Matrix:")
-            print(intrinsicMatrix)
+            self.intrinsicsLabel.text = text
         }
     }
-}
 
+    private func matrixString(_ m: matrix_float3x3) -> String {
+        return String(
+            format: "[%.1f, %.1f, %.1f]\n[%.1f, %.1f, %.1f]\n[%.1f, %.1f, %.1f]",
+            m[0][0], m[0][1], m[0][2],
+            m[1][0], m[1][1], m[1][2],
+            m[2][0], m[2][1], m[2][2]
+        )
+    }
+}
